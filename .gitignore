@@ -1,0 +1,4 @@
+blockchain/.env
+frontend/.env
+.DS_Store
+*.log
