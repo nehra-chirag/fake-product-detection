@@ -11,8 +11,11 @@ function VerifyPage() {
   const [searchId, setSearchId] = useState("");
   const [searched, setSearched] = useState(false);
 
+  // Detect if opened via QR scan
+  const isQRScan = productId && productId !== "0";
+
   useEffect(() => {
-    if (productId && productId !== "0") {
+    if (isQRScan) {
       setSearchId(productId);
       verifyProduct(productId);
     }
@@ -62,6 +65,72 @@ function VerifyPage() {
     navigate("/verify/0");
   };
 
+  // ── QR SCAN MODE — show only result, nothing else ──
+  if (isQRScan) {
+    return (
+      <div style={styles.qrContainer}>
+
+        {/* Loading */}
+        {loading && (
+          <div style={styles.centered}>
+            <div style={styles.loadingCard}>
+              <p style={styles.loadingIcon}>🔍</p>
+              <p style={styles.loadingText}>Verifying on blockchain...</p>
+              <p style={styles.loadingSubText}>Please wait a moment</p>
+            </div>
+          </div>
+        )}
+
+        {/* Genuine */}
+        {!loading && product && (
+          <div style={styles.genuineCardQR}>
+            <div style={styles.genuineIcon}>✅</div>
+            <h2 style={styles.genuineTitle}>GENUINE PRODUCT</h2>
+            <p style={styles.genuineSubtitle}>
+              Verified on the Ethereum blockchain
+            </p>
+            <div style={styles.detailsBox}>
+              {[
+                { label: "Product Name", value: product.name },
+                { label: "Batch Number", value: product.batchNumber },
+                { label: "Manufacturing Date", value: product.manufacturingDate },
+                { label: "Description", value: product.description },
+                { label: "Manufacturer Address", value: product.manufacturer },
+              ].map((item) => (
+                <div key={item.label} style={styles.detailRow}>
+                  <span style={styles.detailLabel}>{item.label}</span>
+                  <span style={styles.detailValue}>{item.value}</span>
+                </div>
+              ))}
+            </div>
+            <div style={styles.poweredBy}>
+              🛡️ Powered by FakeGuard — Blockchain Verified
+            </div>
+          </div>
+        )}
+
+        {/* Fake */}
+        {!loading && error === "fake" && (
+          <div style={styles.fakeCardQR}>
+            <div style={styles.fakeIcon}>❌</div>
+            <h2 style={styles.fakeTitle}>FAKE OR UNREGISTERED PRODUCT</h2>
+            <p style={styles.fakeSubtitle}>
+              Product ID <strong>{productId}</strong> could not be
+              verified on the blockchain.
+            </p>
+            <p style={styles.fakeWarning}>
+              ⚠️ Do not trust this product.
+            </p>
+            <div style={styles.poweredByFake}>
+              🛡️ Powered by FakeGuard — Blockchain Verified
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── NORMAL MODE — show search box + result ──
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>🔍 Product Verification</h1>
@@ -102,13 +171,11 @@ function VerifyPage() {
       {/* Loading */}
       {loading && (
         <div style={styles.centered}>
-          <p style={styles.loadingText}>
-            🔄 Verifying product on blockchain...
-          </p>
+          <p style={styles.loadingText}>🔄 Verifying on blockchain...</p>
         </div>
       )}
 
-      {/* Genuine Product */}
+      {/* Genuine */}
       {!loading && product && (
         <div style={styles.genuineCard}>
           <div style={styles.genuineIcon}>✅</div>
@@ -133,14 +200,13 @@ function VerifyPage() {
         </div>
       )}
 
-      {/* Fake Product */}
+      {/* Fake */}
       {!loading && error === "fake" && searched && (
         <div style={styles.fakeCard}>
           <div style={styles.fakeIcon}>❌</div>
           <h2 style={styles.fakeTitle}>FAKE OR UNREGISTERED PRODUCT</h2>
           <p style={styles.fakeSubtitle}>
-            Product ID <strong>{searchId}</strong> could not be found on the
-            blockchain.
+            Product ID <strong>{searchId}</strong> could not be found.
           </p>
           <p style={styles.fakeWarning}>⚠️ Do not trust this product.</p>
           <button style={styles.tryAgainBtn} onClick={handleReset}>
@@ -149,7 +215,7 @@ function VerifyPage() {
         </div>
       )}
 
-      {/* Default State */}
+      {/* Default */}
       {!loading && !searched && (
         <div style={styles.defaultState}>
           <p style={styles.defaultIcon}>📦</p>
@@ -166,6 +232,83 @@ function VerifyPage() {
 }
 
 const styles = {
+  // QR Scan mode styles
+  qrContainer: {
+    minHeight: "100vh",
+    backgroundColor: "#f0f4f8",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px",
+    fontFamily: "Arial, sans-serif",
+  },
+  centered: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingCard: {
+    backgroundColor: "white",
+    borderRadius: "16px",
+    padding: "48px 32px",
+    textAlign: "center",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.1)",
+    minWidth: "300px",
+  },
+  loadingIcon: {
+    fontSize: "48px",
+    marginBottom: "16px",
+  },
+  loadingText: {
+    fontSize: "18px",
+    color: "#333",
+    fontWeight: "bold",
+    marginBottom: "8px",
+  },
+  loadingSubText: {
+    fontSize: "14px",
+    color: "#888",
+  },
+  genuineCardQR: {
+    backgroundColor: "white",
+    borderRadius: "16px",
+    padding: "32px 24px",
+    width: "100%",
+    maxWidth: "440px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+    textAlign: "center",
+    border: "3px solid #2ecc71",
+  },
+  fakeCardQR: {
+    backgroundColor: "white",
+    borderRadius: "16px",
+    padding: "32px 24px",
+    width: "100%",
+    maxWidth: "440px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+    textAlign: "center",
+    border: "3px solid #e74c3c",
+  },
+  poweredBy: {
+    marginTop: "20px",
+    padding: "10px",
+    backgroundColor: "#f0fff4",
+    borderRadius: "8px",
+    fontSize: "12px",
+    color: "#2ecc71",
+    fontWeight: "bold",
+  },
+  poweredByFake: {
+    marginTop: "20px",
+    padding: "10px",
+    backgroundColor: "#fff5f5",
+    borderRadius: "8px",
+    fontSize: "12px",
+    color: "#e74c3c",
+    fontWeight: "bold",
+  },
+
+  // Normal mode styles
   container: {
     minHeight: "100vh",
     backgroundColor: "#f0f4f8",
@@ -224,14 +367,6 @@ const styles = {
     cursor: "pointer",
     whiteSpace: "nowrap",
   },
-  centered: {
-    textAlign: "center",
-    padding: "40px",
-  },
-  loadingText: {
-    fontSize: "18px",
-    color: "#666",
-  },
   genuineCard: {
     backgroundColor: "white",
     borderRadius: "12px",
@@ -260,6 +395,7 @@ const styles = {
     backgroundColor: "#f8f9fa",
     borderRadius: "8px",
     padding: "20px",
+    marginTop: "16px",
   },
   detailRow: {
     display: "flex",
